@@ -1,0 +1,55 @@
+import boto3
+
+# Create an Auto Scaling client
+autoscaling = boto3.client('autoscaling')
+
+# Get a list of all Auto Scaling groups
+asgs = autoscaling.describe_auto_scaling_groups()['AutoScalingGroups']
+
+# Iterate over each Auto Scaling group
+for asg in asgs:
+    # Update the Auto Scaling group's desired capacity to 0
+    autoscaling.update_auto_scaling_group(AutoScalingGroupName=asg['AutoScalingGroupName'], DesiredCapacity=0)
+    
+    # Print a message indicating that the Auto Scaling group's desired capacity was set to 0
+    print(f'Auto Scaling group {asg["AutoScalingGroupName"]} desired capacity was set to 0.')
+
+# Create Elastic Beanstalk client
+elastic_beanstalk = boto3.client('elasticbeanstalk')
+
+# Get a list of all Elastic Beanstalk environments
+environments = elastic_beanstalk.describe_environments()['Environments']
+
+# Iterate over each Elastic Beanstalk environment
+for environment in environments:
+    # Check if the environment is running
+    if environment['Status'] == 'Running':
+        # if environment is running then terminate it
+        elastic_beanstalk.terminate_environment(EnvironmentId=environment['EnvironmentId'])
+        
+        # Print a message indicating that the Elastic Beanstalk environment was terminated
+        print(f'Elastic Beanstalk environment {environment["EnvironmentName"]} was terminated.')
+        
+
+#reduce costs by automatically scaling resources up and down based on demand, using services like Auto Scaling and AWS Elastic Beanstalk. Additionally, it will terminate Elastic Beanstalk environment when not in use
+
+import boto3
+
+# Create a Lambda client
+lambda_client = boto3.client('lambda')
+
+# Get a list of all Lambda functions
+functions = lambda_client.list_functions()['Functions']
+
+# Iterate over each Lambda function
+for function in functions:
+    # Get the current configuration of the function
+    config = lambda_client.get_function_configuration(FunctionName=function['FunctionName'])
+    
+    # Check if the function is currently running
+    if config['State'] == 'Active':
+        # if function is running then stop it
+        lambda_client.update_function_configuration(FunctionName=function['FunctionName'], State='Inactive')
+        
+        # Print a message indicating that the Lambda function was stopped
+        print(f'Lambda function {function["FunctionName"]} was stopped.')
